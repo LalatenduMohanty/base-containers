@@ -1,0 +1,6 @@
+# Build-time Python dependencies
+# These are installed during container image build, not at runtime.
+# Dependabot/Renovate can automatically update these versions.
+
+uv==0.9.25
+

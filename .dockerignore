@@ -1,0 +1,26 @@
+# Version control
+.git
+.gitignore
+
+# CI/CD
+.github
+.tekton
+
+# Documentation (not needed in image)
+*.md
+LICENSE
+docs/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.log
+
