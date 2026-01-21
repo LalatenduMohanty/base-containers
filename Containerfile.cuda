@@ -76,14 +76,13 @@ ENV NV_CUDNN_PACKAGE=libcudnn9-cuda-12-${NV_CUDNN_VERSION}
 RUN --mount=type=cache,target=/var/cache/dnf,sharing=locked,id=odh-base-containers-cuda-dnf \
     dnf install -y --setopt=keepcache=1 --allowerasing curl ca-certificates
 
-RUN cat > /etc/yum.repos.d/cuda.repo << EOF
-[cuda-rhel9-${NVARCH}]
-name=cuda-rhel9-${NVARCH}
-baseurl=https://developer.download.nvidia.com/compute/cuda/repos/rhel9/${NVARCH}
-enabled=1
-gpgcheck=1
-gpgkey=https://developer.download.nvidia.com/compute/cuda/repos/rhel9/${NVARCH}/D42D0685.pub
-EOF
+RUN { echo "[cuda-rhel9-${NVARCH}]"; \
+      echo "name=cuda-rhel9-${NVARCH}"; \
+      echo "baseurl=https://developer.download.nvidia.com/compute/cuda/repos/rhel9/${NVARCH}"; \
+      echo "enabled=1"; \
+      echo "gpgcheck=1"; \
+      echo "gpgkey=https://developer.download.nvidia.com/compute/cuda/repos/rhel9/${NVARCH}/D42D0685.pub"; \
+    } > /etc/yum.repos.d/cuda.repo
 
 # GPG key verification
 RUN NVIDIA_GPGKEY_SUM=d0664fbbdb8c32356d45de36c5984617217b2d0bef41b93ccecd326ba3b80c87 && \
