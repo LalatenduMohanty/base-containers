@@ -40,17 +40,22 @@ podman build -t odh-midstream-cuda-base:12.8-py312 \
 ```text
 base-containers/
 ├── Containerfile.python       # Python 3.12 on UBI 9
-├── Containerfile.cuda          # CUDA 12.8 + Python 3.12
+├── Containerfile.cuda         # CUDA 12.8 + Python 3.12
+├── .hadolint.yaml             # Hadolint configuration
 ├── build-args/
-│   ├── python-app.conf                     # Python/CPU image build arguments
-│   └── cuda-app.conf                    # CUDA/GPU image build arguments
-├── requirements-build.txt               # Build-time Python deps (enables Dependabot)
+│   ├── python-app.conf        # Python/CPU image build arguments
+│   └── cuda-app.conf          # CUDA/GPU image build arguments
+├── requirements-build.txt     # Build-time Python deps (enables Dependabot)
 ├── scripts/
-│   ├── build.sh                         # Build script
-│   └── fix-permissions                  # OpenShift permission fixer
+│   ├── build.sh               # Build script
+│   ├── lint-containerfile.sh  # Containerfile linter (Hadolint)
+│   └── fix-permissions        # OpenShift permission fixer
+├── .github/
+│   └── workflows/
+│       └── ci.yml                    # CI workflow (Hadolint, tests)
 ├── docs/
-│   └── RATIONALE.md                     # Why this project exists
-├── .tekton/                             # Konflux pipeline definitions
+│   └── RATIONALE.md           # Why this project exists
+├── .tekton/                   # Konflux pipeline definitions
 ├── LICENSE
 └── README.md
 ```
