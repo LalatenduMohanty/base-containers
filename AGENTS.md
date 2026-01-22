@@ -15,13 +15,18 @@ This repository provides standardized Containerfiles for building Open Data Hub 
 base-containers/
 ├── Containerfile.python              # Python 3.12 on UBI 9 (CPU)
 ├── Containerfile.cuda                # CUDA 12.8 + Python 3.12 (GPU)
+├── .hadolint.yaml                    # Hadolint linter configuration
 ├── build-args/
 │   ├── python-app.conf               # Python build arguments
 │   └── cuda-app.conf                 # CUDA build arguments
 ├── requirements-build.txt            # Build-time deps (uv) - Dependabot updates
 ├── scripts/
 │   ├── build.sh                      # Main build script
+│   ├── lint-containerfile.sh                       # Containerfile linter (Hadolint)
 │   └── fix-permissions               # OpenShift permission fixer
+├── .github/
+│   └── workflows/
+│       └── ci.yml                                  # CI workflow (Hadolint, tests)
 └── docs/
     └── RATIONALE.md
 ```
@@ -33,6 +38,16 @@ base-containers/
 ./scripts/build.sh cuda               # Build CUDA image
 ./scripts/build.sh all                # Build all images
 ```
+
+## Lint Commands
+
+```bash
+./scripts/lint-containerfile.sh                     # Lint all Containerfiles
+./scripts/lint-containerfile.sh Containerfile.python    # Lint specific file
+./scripts/lint-containerfile.sh Containerfile.*         # Lint matching files
+```
+
+Hadolint configuration is in `.hadolint.yaml`. Run linting before submitting PRs.
 
 ## Build System
 
@@ -80,3 +95,4 @@ When modifying `Containerfile.python` or `Containerfile.cuda`, check if the same
 - [UBI Python Images](https://catalog.redhat.com/software/containers/ubi9/python-312)
 - [uv Package Manager](https://github.com/astral-sh/uv/releases)
 - [buildah-build(1) documentation](https://github.com/containers/buildah/blob/main/docs/buildah-build.1.md)
+- [Hadolint - Dockerfile Linter](https://github.com/hadolint/hadolint)

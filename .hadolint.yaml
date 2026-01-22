@@ -1,0 +1,73 @@
+# Hadolint Configuration for ODH Base Containers
+# https://github.com/hadolint/hadolint#configure
+
+# Run locally: ./scripts/lint-containerfile.sh
+# Run in CI: See .github/workflows/ci.yml
+
+# Hadolint can warn DL3026 when images from untrusted repositories are being used in Dockerfiles
+# Trusted registries (base images from these don't trigger DL3026)
+trustedRegistries:
+  - registry.access.redhat.com
+  - registry.redhat.io
+  - quay.io
+
+# Failure threshold (error, warning, info, style, ignore, none)
+failure-threshold: warning
+
+# Required Labels for ODH/RHOAI Containers
+# Hadolint will warn (DL3049) if any of these labels are missing.
+label-schema:
+  # Red Hat / OpenShift Required Labels
+  # https://docs.redhat.com/en/documentation/red_hat_software_certification/
+  name: text                              # Image name (required for Red Hat certification)
+  version: text                           # Image version
+  summary: text                           # Short description (max 80 chars recommended)
+  description: text                       # Full description
+  io.k8s.display-name: text               # Display name in OpenShift console
+  io.k8s.description: text                # Description in Kubernetes/OpenShift
+  io.openshift.tags: text                 # Comma-separated tags for OpenShift
+
+  # OCI Image Specification Labels
+  # https://github.com/opencontainers/image-spec/blob/main/annotations.md
+  org.opencontainers.image.source: url    # URL to source repository
+  org.opencontainers.image.vendor: text   # Vendor/organization name
+  org.opencontainers.image.licenses: spdx # SPDX license identifier
+  org.opencontainers.image.title: text    # Human-readable title
+  org.opencontainers.image.description: text  # Human-readable description
+  org.opencontainers.image.version: text  # Semantic version
+
+  # ODH-Specific Labels
+  # Custom labels for Open Data Hub ecosystem
+  com.opendatahub.accelerator: text       # Accelerator type: cpu, cuda, rocm
+  com.opendatahub.python: text            # Python version (e.g., 3.12)
+
+# Ignored rules with explanations:
+
+ignored:
+  # DL3006: Always tag the version of an image explicitly
+  # We use ARG BASE_IMAGE for flexibility - version is controlled via build-args/*.conf
+  - DL3006
+
+  # DL3026: Use only an allowed registry in the FROM image
+  # We use ARG BASE_IMAGE for flexibility - the actual registry is controlled via build-args/*.conf
+  - DL3026
+
+  # DL3040: `dnf clean all` missing after dnf command
+  # We intentionally use --mount=type=cache for dnf caching in multi-step builds
+  - DL3040
+
+  # DL3041: Specify version with `dnf install -y <package>-<version>`
+  # Versions are controlled via ARG variables from build-args/*.conf, not inline
+  - DL3041
+
+  # DL3049: Label is missing
+  # Multi-stage builds have intermediate stages without all labels - only final stage needs them
+  - DL3049
+
+  # DL3059: Multiple consecutive RUN instructions
+  # Intentional for layer caching, maintainability, and cache mounts in CUDA image
+  - DL3059
+
+  # DL4006: Set the SHELL option -o pipefail before RUN with a pipe in it
+  # The pipe commands in our Containerfiles are safe and pipefail could have side effects
+  - DL4006
