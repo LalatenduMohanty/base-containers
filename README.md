@@ -7,6 +7,7 @@ Common base container images for Open Data Hub (ODH) workloads.
 This repository provides standardized Containerfiles for building ODH midstream base images. These images serve as the foundation for AI/ML workloads in OpenShift AI.
 
 **Why base images?** See [docs/RATIONALE.md](docs/RATIONALE.md) for the motivation behind this project.
+For development setup and workflow, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Quick Start
 
@@ -54,6 +55,7 @@ base-containers/
 │   └── workflows/
 │       └── ci.yml                    # CI workflow (Hadolint, tests)
 ├── docs/
+│   ├── DEVELOPMENT.md         # Development setup and workflow
 │   └── RATIONALE.md           # Why this project exists
 ├── .tekton/                   # Konflux pipeline definitions
 ├── LICENSE

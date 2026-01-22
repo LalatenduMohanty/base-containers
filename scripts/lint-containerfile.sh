@@ -26,7 +26,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 log_header() { echo -e "${BLUE}==>${NC} $1"; }
 
 # Hadolint version for container fallback
-HADOLINT_VERSION="${HADOLINT_VERSION:-v2.12.0}"
+HADOLINT_VERSION="${HADOLINT_VERSION:-v2.14.0}"
 
 # Global variable for hadolint command (set by check_hadolint)
 HADOLINT_CMD=()
@@ -126,7 +126,7 @@ print_usage() {
     echo "  $0 path/to/Dockerfile           # Lint Dockerfile"
     echo ""
     echo "Environment Variables:"
-    echo "  HADOLINT_VERSION  - Hadolint container version (default: v2.12.0)"
+    echo "  HADOLINT_VERSION  - Hadolint container version (default: v2.14.0)"
     echo ""
     echo "Configuration: .hadolint.yaml"
 }

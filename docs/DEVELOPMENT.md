@@ -67,6 +67,20 @@ ruff format tests/
 mypy tests/
 ```
 
+## Containerfile Linting (Hadolint)
+
+Use the lint script to check Containerfiles. If Hadolint is not installed locally,
+the script falls back to running Hadolint via podman.
+
+```bash
+# Lint all Containerfiles in project
+./scripts/lint-containerfile.sh
+
+# Lint specific file
+./scripts/lint-containerfile.sh Containerfile.python
+./scripts/lint-containerfile.sh path/to/Dockerfile
+```
+
 ## Building Images
 
 Use the build script to build container images:
@@ -125,8 +139,14 @@ GitHub Actions automatically runs on every PR and push to `main`:
 |-----|---------|-------------|
 | `lint` | PR, push | Runs `ruff check` and `ruff format --check` |
 | `type-check` | PR, push | Runs `mypy` type checking |
-| `test-python-image` | PR, push | Builds Python image and runs tests |
-| `test-cuda-image` | push to main | Builds CUDA image and runs tests (skipped on PRs due to size) |
+| `lint-containerfiles` | PR, push | Lints changed Containerfiles with Hadolint |
+| `test-python-image` | PR, push | Builds Python image and runs tests when Python-related files change |
+| `test-cuda-image` | PR, push | Builds CUDA image and runs tests when CUDA-related files change |
+| `ci-status` | PR, push | Aggregates required jobs for branch protection |
+
+The `ci-status` job always runs and fails if any required job fails or is cancelled.
+Conditional jobs (like `lint-containerfiles` and `test-cuda-image`) may be skipped
+when changes do not apply.
 
 ### Before Submitting a PR
 

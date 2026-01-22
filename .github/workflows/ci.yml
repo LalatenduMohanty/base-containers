@@ -85,19 +85,24 @@ jobs:
     outputs:
       containerfiles_changed: ${{ steps.changed.outputs.any_changed }}
       containerfiles_list: ${{ steps.changed.outputs.all_changed_files }}
+      containerfiles: ${{ steps.containerfiles-matrix.outputs.containerfiles }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Get changed Containerfiles
         id: changed
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@v47
         with:
           files: |
             **/Containerfile*
             **/Dockerfile*
           json: true
 
+      - name: Create Lint Job Matrix
+        id: containerfiles-matrix
+        run: echo "containerfiles=${{ steps.changed.outputs.all_changed_files }}" >> "$GITHUB_OUTPUT"
+        
   lint-containerfiles:
     name: Lint Containerfiles (Hadolint)
     runs-on: ubuntu-latest
@@ -105,14 +110,14 @@ jobs:
     if: needs.detect-containerfile-changes.outputs.containerfiles_changed == 'true'
     strategy:
       matrix:
-        containerfile: ${{ fromJSON(needs.detect-containerfile-changes.outputs.containerfiles_list) }}
+        containerfile: ${{ fromJSON(needs.detect-containerfile-changes.outputs.containerfiles) }}
       fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Lint changed Containerfiles
-        uses: hadolint/hadolint-action@v3
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: ${{ matrix.containerfile }}
           config: .hadolint.yaml
@@ -120,7 +125,14 @@ jobs:
   test-python-image:
     name: Test Python Image
     runs-on: ubuntu-latest
-    needs: [lint, type-check]
+    needs: [lint, type-check, changes, lint-containerfiles]
+    # Run when Python-related files change AND lint-containerfiles passed/skipped
+    if: |
+      always() &&
+      needs.changes.outputs.python == 'true' &&
+      needs.lint.result == 'success' &&
+      needs.type-check.result == 'success' &&
+      (needs.lint-containerfiles.result == 'success' || needs.lint-containerfiles.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
 
@@ -149,9 +161,14 @@ jobs:
   test-cuda-image:
     name: Test CUDA Image
     runs-on: ubuntu-latest
-    needs: [lint, type-check, changes]
-    # Run when CUDA-related files change (PRs or push to main)
-    if: needs.changes.outputs.cuda == 'true'
+    needs: [lint, type-check, changes, lint-containerfiles]
+    # Run when CUDA-related files change AND lint-containerfiles passed/skipped
+    if: |
+      always() &&
+      needs.changes.outputs.cuda == 'true' &&
+      needs.lint.result == 'success' &&
+      needs.type-check.result == 'success' &&
+      (needs.lint-containerfiles.result == 'success' || needs.lint-containerfiles.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
 
@@ -189,3 +206,42 @@ jobs:
         env:
           CUDA_IMAGE: ${{ env.IMAGE_REGISTRY }}/odh-midstream-cuda-base:${{ steps.config.outputs.tag }}
         run: pytest tests/test_cuda_image.py tests/test_common.py -v
+
+  # Aggregator job for branch protection - use this as the required status check
+  # This ensures all jobs (including conditional ones) must pass before merging
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - lint
+      - type-check
+      - lint-containerfiles
+      - test-python-image
+      - test-cuda-image
+    steps:
+      - name: Check CI status
+        run: |
+          echo "lint: ${{ needs.lint.result }}"
+          echo "type-check: ${{ needs.type-check.result }}"
+          echo "lint-containerfiles: ${{ needs.lint-containerfiles.result }}"
+          echo "test-python-image: ${{ needs.test-python-image.result }}"
+          echo "test-cuda-image: ${{ needs.test-cuda-image.result }}"
+
+          # Fail if any required job failed or was cancelled
+          # Note: 'skipped' is OK for conditional jobs (lint-containerfiles, test-cuda-image)
+          if [[ "${{ needs.lint.result }}" == "failure" || \
+                "${{ needs.lint.result }}" == "cancelled" || \
+                "${{ needs.type-check.result }}" == "failure" || \
+                "${{ needs.type-check.result }}" == "cancelled" || \
+                "${{ needs.lint-containerfiles.result }}" == "failure" || \
+                "${{ needs.lint-containerfiles.result }}" == "cancelled" || \
+                "${{ needs.test-python-image.result }}" == "failure" || \
+                "${{ needs.test-python-image.result }}" == "cancelled" || \
+                "${{ needs.test-cuda-image.result }}" == "failure" || \
+                "${{ needs.test-cuda-image.result }}" == "cancelled" ]]; then
+            echo "::error::One or more CI jobs failed or were cancelled"
+            exit 1
+          fi
+
+          echo "All CI checks passed!"
