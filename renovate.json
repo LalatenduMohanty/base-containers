@@ -38,6 +38,12 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["/^registry\\.access\\.redhat\\.com/"],
       "versioning": "redhat"
+    },
+    {
+      "description": "Pin Python to 3.12.x in CI workflows - allow patch updates but not minor/major version bumps",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["python"],
+      "allowedVersions": "~3.12"
     }
   ]
 }
