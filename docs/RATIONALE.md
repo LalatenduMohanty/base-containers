@@ -68,7 +68,7 @@ RUN dnf install -y libcudnn9-cuda-12 ...
 **After (repo consumes published base):**
 
 ```dockerfile
-FROM quay.io/opendatahub/odh-midstream-cuda-base:12.8-py312
+FROM quay.io/opendatahub/odh-midstream-cuda-base-12-8
 # Application setup only
 COPY requirements.txt .
 RUN pip install -r requirements.txt

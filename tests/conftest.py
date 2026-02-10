@@ -140,11 +140,11 @@ def python_image():
     """Image name for Python base image.
 
     Set via PYTHON_IMAGE environment variable.
-    Example: PYTHON_IMAGE=quay.io/opendatahub/odh-midstream-python-base:3.12-ubi9
+    Example: PYTHON_IMAGE=quay.io/opendatahub/odh-midstream-python-base-3-12
     """
     return _get_required_env(
         "PYTHON_IMAGE",
-        "quay.io/opendatahub/odh-midstream-python-base:<tag>",
+        "quay.io/opendatahub/odh-midstream-python-base-<python_major_version>-<python_minor_version>",
     )
 
 
@@ -153,11 +153,11 @@ def cuda_image():
     """Image name for CUDA base image.
 
     Set via CUDA_IMAGE environment variable.
-    Example: CUDA_IMAGE=quay.io/opendatahub/odh-midstream-cuda-base:12.8-py312
+    Example: CUDA_IMAGE=quay.io/opendatahub/odh-midstream-cuda-base-12-8
     """
     return _get_required_env(
         "CUDA_IMAGE",
-        "quay.io/opendatahub/odh-midstream-cuda-base:<tag>",
+        "quay.io/opendatahub/odh-midstream-cuda-base-<cuda_major_version>-<cuda_minor_version>",
     )
 
 

@@ -103,8 +103,8 @@ Tests require the container images to be built first and their names passed via 
 ### Using tox
 
 ```bash
-PYTHON_IMAGE=quay.io/opendatahub/odh-midstream-python-base:3.12-ubi9 \
-CUDA_IMAGE=quay.io/opendatahub/odh-midstream-cuda-base:12.8-py312 \
+PYTHON_IMAGE=quay.io/opendatahub/odh-midstream-python-base-3-12 \
+CUDA_IMAGE=quay.io/opendatahub/odh-midstream-cuda-base-12-8 \
 tox -e test
 ```
 
@@ -125,8 +125,8 @@ CUDA_IMAGE=<image:tag> pytest tests/test_cuda_image.py tests/test_common.py -v
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `PYTHON_IMAGE` | Python base image to test | `quay.io/opendatahub/odh-midstream-python-base:3.12-ubi9` |
-| `CUDA_IMAGE` | CUDA base image to test | `quay.io/opendatahub/odh-midstream-cuda-base:12.8-py312` |
+| `PYTHON_IMAGE` | Python base image to test | `quay.io/opendatahub/odh-midstream-python-base-3-12` |
+| `CUDA_IMAGE` | CUDA base image to test | `quay.io/opendatahub/odh-midstream-cuda-base-12-8` |
 | `PYTHON_VERSION` | Expected Python version for validation | `3.12` |
 | `CUDA_VERSION` | Expected CUDA version for validation | `12.8`, `12.9`, `13.0`, `13.1` |
 

@@ -16,6 +16,38 @@ For development setup and workflow, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.m
 | Python | 3.12                   | UBI 9            |
 | CUDA   | 12.8, 12.9, 13.0, 13.1 | CentOS Stream 9  |
 
+## Pulling Base Images
+
+The ODH base images are published to [quay.io/opendatahub](https://quay.io/organization/opendatahub) and ready to use.
+
+### Python Images
+
+| Version | Image | Quay.io Repository |
+|---------|-------|-------------------|
+| 3.12 | `quay.io/opendatahub/odh-midstream-python-base-3-12` | [View on Quay.io](https://quay.io/repository/opendatahub/odh-midstream-python-base-3-12) |
+
+```bash
+# Pull Python 3.12 base image
+podman pull quay.io/opendatahub/odh-midstream-python-base-3-12
+```
+
+### CUDA Images
+
+| Version | Image | Quay.io Repository |
+|---------|-------|-------------------|
+| 12.8 | `quay.io/opendatahub/odh-midstream-cuda-base-12-8` | [View on Quay.io](https://quay.io/repository/opendatahub/odh-midstream-cuda-base-12-8) |
+| 12.9 | `quay.io/opendatahub/odh-midstream-cuda-base-12-9` | [View on Quay.io](https://quay.io/repository/opendatahub/odh-midstream-cuda-base-12-9) |
+| 13.0 | `quay.io/opendatahub/odh-midstream-cuda-base-13-0` | [View on Quay.io](https://quay.io/repository/opendatahub/odh-midstream-cuda-base-13-0) |
+| 13.1 | `quay.io/opendatahub/odh-midstream-cuda-base-13-1` | [View on Quay.io](https://quay.io/repository/opendatahub/odh-midstream-cuda-base-13-1) |
+
+```bash
+# Pull CUDA 12.8 base image
+podman pull quay.io/opendatahub/odh-midstream-cuda-base-12-8
+
+# Pull CUDA 13.1 base image
+podman pull quay.io/opendatahub/odh-midstream-cuda-base-13-1
+```
+
 ## Repository Structure
 
 Each image type has version-specific directories containing a `Containerfile` and `app.conf`:
@@ -86,7 +118,7 @@ Both images share consistent configuration:
 ### Python Application
 
 ```dockerfile
-FROM quay.io/opendatahub/odh-midstream-python-base:py312
+FROM quay.io/opendatahub/odh-midstream-python-base-3-12
 
 # pip and uv are pre-configured with package indexes
 COPY requirements.txt .
@@ -100,7 +132,7 @@ CMD ["python", "app.py"]
 ### CUDA Application
 
 ```dockerfile
-FROM quay.io/opendatahub/odh-midstream-cuda-base:12.8-py312
+FROM quay.io/opendatahub/odh-midstream-cuda-base-12-8
 
 # pip and uv are pre-configured with PyPI + PyTorch CUDA indexes
 COPY requirements.txt .
