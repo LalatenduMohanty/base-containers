@@ -159,6 +159,9 @@ The `ci-status` job always runs and fails if any required job fails or is cancel
 Conditional jobs (like `lint-containerfiles` and `test-cuda-image`) may be skipped
 when changes do not apply.
 
+Version matrices are built dynamically from the directory structure (`cuda/*/`, `python/*/`).
+No manual CI updates are needed when adding new versions.
+
 ### Before Submitting a PR
 
 Ensure your changes pass locally:

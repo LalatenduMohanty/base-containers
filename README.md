@@ -162,10 +162,6 @@ Use the generation script to create a new version from the template:
 # Include PYTHON_VERSION and PYTHON_VERSION_NODOT
 ```
 
-After adding a new version, also update `.github/workflows/ci.yml`:
-- Add the version to the `matrix.version` array in the corresponding test job
-- Add a version-specific path filter if desired (e.g., `cuda-13-2`)
-
 ## Build Arguments
 
 Build arguments are defined in `<type>/<version>/app.conf` files. The build script passes these directly via `--build-arg-file`.
