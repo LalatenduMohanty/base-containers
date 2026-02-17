@@ -30,22 +30,34 @@ base-containers/
 │   └── 3.12/
 │       ├── Containerfile                 # Python 3.12 Containerfile
 │       └── app.conf                      # Python 3.12 build arguments
-├── Containerfile.cuda.template           # Template for new CUDA versions
-├── Containerfile.python.template         # Template for new Python versions
-├── .hadolint.yaml                        # Hadolint linter configuration
-├── requirements-build.txt                # Build-time deps (uv) - Dependabot updates
+├── tests/                                # Pytest-based test suite
+│   ├── conftest.py                       # Shared fixtures
+│   ├── test_common.py                    # Tests for both image types
+│   ├── test_cuda_image.py                # CUDA-specific tests
+│   └── test_python_image.py              # Python-specific tests
 ├── scripts/
 │   ├── build.sh                          # Main build script
 │   ├── generate-containerfile.sh         # Generate Containerfile + app.conf from template
 │   ├── update-default-python-version.sh  # Update default Python version in CI/tooling
 │   ├── lint-containerfile.sh             # Containerfile linter (Hadolint)
 │   └── fix-permissions                   # OpenShift permission fixer
+├── docs/
+│   ├── ADDING-PYTHON-VERSION.md          # Guide for adding Python versions
+│   ├── DEVELOPMENT.md                    # Development setup and workflow
+│   └── RATIONALE.md                      # Project motivation
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                        # CI workflow (Hadolint, tests)
+│       ├── ci.yml                        # CI workflow (lint, type-check, tests)
 │       └── check-cuda-versions.yml       # Auto-detect new CUDA versions
-└── docs/
-    └── RATIONALE.md
+├── .tekton/                              # Konflux pipeline definitions
+│   └── *.yaml                            # Push/PR pipelines per image
+├── Containerfile.cuda.template           # Template for new CUDA versions
+├── Containerfile.python.template         # Template for new Python versions
+├── pyproject.toml                        # Python project configuration
+├── tox.ini                               # Test automation (lint, type, test)
+├── renovate.json                         # Renovate bot configuration
+├── requirements-build.txt                # Build-time deps (uv) - Renovate updates
+└── .hadolint.yaml                        # Hadolint linter configuration
 ```
 
 ## Build Commands
@@ -75,6 +87,30 @@ base-containers/
 ```
 
 Hadolint configuration is in `.hadolint.yaml`. Run linting before submitting PRs.
+
+## Test Commands
+
+Tests use pytest with session-scoped container fixtures. Images must be built first.
+
+```bash
+# Run all tests
+PYTHON_IMAGE=<image:tag> CUDA_IMAGE=<image:tag> pytest tests/ -v
+
+# Run Python image tests only
+PYTHON_IMAGE=<image:tag> PYTHON_VERSION=3.12 pytest tests/test_python_image.py tests/test_common.py -v
+
+# Run CUDA image tests only
+CUDA_IMAGE=<image:tag> CUDA_VERSION=12.8 pytest tests/test_cuda_image.py tests/test_common.py -v
+```
+
+| Variable | Description |
+|----------|-------------|
+| `PYTHON_IMAGE` | Python image to test (e.g., `localhost/odh-midstream-python-base:py312`) |
+| `CUDA_IMAGE` | CUDA image to test (e.g., `localhost/odh-midstream-cuda-base:12.8-py312`) |
+| `PYTHON_VERSION` | Expected Python version for validation |
+| `CUDA_VERSION` | Expected CUDA version for validation |
+
+Tests are skipped if the corresponding image variable is not set.
 
 ## Adding New Versions
 
