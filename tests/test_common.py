@@ -6,9 +6,7 @@ across all ODH base container images.
 
 import pytest
 
-# Common paths used across tests (mirrors conftest.py)
-APP_ROOT = "/opt/app-root"
-WORKDIR = f"{APP_ROOT}/src"
+from tests import APP_ROOT, WORKDIR
 
 
 @pytest.fixture(params=["python_container", "cuda_container"])

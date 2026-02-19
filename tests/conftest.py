@@ -16,10 +16,6 @@ import subprocess
 
 import pytest
 
-# Common paths used across tests
-APP_ROOT = "/opt/app-root"
-WORKDIR = f"{APP_ROOT}/src"
-
 
 class ContainerRunner:
     """Efficient container runner using session-scoped container with exec.

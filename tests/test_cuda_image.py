@@ -62,19 +62,19 @@ def test_cuda_dir_exists(cuda_container):
 def test_libcudart_present(cuda_container):
     """Verify CUDA runtime library is present."""
     result = cuda_container.run("ldconfig -p | grep libcudart")
-    assert result.returncode == 0
+    assert result.returncode == 0, "libcudart.so not found - cuda-cudart package may be missing"
 
 
 def test_libcublas_present(cuda_container):
     """Verify cuBLAS library is present."""
     result = cuda_container.run("ldconfig -p | grep libcublas")
-    assert result.returncode == 0
+    assert result.returncode == 0, "libcublas.so not found - libcublas package may be missing"
 
 
 def test_libcudnn_present(cuda_container):
     """Verify cuDNN library is present."""
     result = cuda_container.run("ldconfig -p | grep libcudnn")
-    assert result.returncode == 0
+    assert result.returncode == 0, "libcudnn.so not found - libcudnn package may be missing"
 
 
 # --- CUDA Label Tests ---
