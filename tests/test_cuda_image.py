@@ -41,6 +41,15 @@ def test_cuda_in_path(cuda_container):
     assert "/usr/local/cuda/bin" in cuda_container.get_env("PATH")
 
 
+def test_cuda_home(cuda_container):
+    """Verify CUDA_HOME points to the CUDA toolkit directory.
+
+    PyTorch source builds (torch.utils.cpp_extension) and Triton JIT kernel
+    compilation rely on CUDA_HOME to locate the toolkit.
+    """
+    assert cuda_container.get_env("CUDA_HOME") == "/usr/local/cuda"
+
+
 # --- CUDA Toolkit Tests ---
 
 
@@ -75,6 +84,41 @@ def test_libcudnn_present(cuda_container):
     """Verify cuDNN library is present."""
     result = cuda_container.run("ldconfig -p | grep libcudnn")
     assert result.returncode == 0
+
+
+# --- PyTorch CUDA Library Tests ---
+
+
+def test_libcupti_present(cuda_container):
+    """Verify CUPTI (CUDA Profiling Tools Interface) library is present.
+
+    Required by the PyTorch profiler for GPU profiling.
+    Installed via cuda-cupti package.
+    """
+    result = cuda_container.run("ldconfig -p | grep libcupti")
+    assert result.returncode == 0, "libcupti.so not found - cuda-cupti package may be missing"
+
+
+def test_libcusparselt_present(cuda_container):
+    """Verify cuSPARSELt (structured sparsity) library is present.
+
+    Used by PyTorch sparse operations for structured sparsity support.
+    Installed via libcusparselt0 package.
+    """
+    result = cuda_container.run("ldconfig -p | grep libcusparseLt")
+    assert result.returncode == 0, (
+        "libcusparseLt.so not found - libcusparselt0 package may be missing"
+    )
+
+
+def test_libcudss_present(cuda_container):
+    """Verify cuDSS (direct sparse solver) library is present.
+
+    Used by scientific and ML solvers for sparse direct solving.
+    Installed via libcudss0-cuda package.
+    """
+    result = cuda_container.run("ldconfig -p | grep libcudss")
+    assert result.returncode == 0, "libcudss.so not found - libcudss0-cuda package may be missing"
 
 
 # --- CUDA Label Tests ---
