@@ -67,6 +67,18 @@ def test_workdir_writable(container):
     assert result.returncode == 0
 
 
+def test_fix_permissions_executable(container):
+    """Verify fix-permissions script is installed and executable.
+
+    This script is critical for OpenShift compatibility, it ensures GID 0
+    group write access on directories. If accidentally removed or with wrong
+    permissions, downstream images break at runtime with permission errors.
+    """
+    assert container.file_executable("/usr/local/bin/fix-permissions"), (
+        "/usr/local/bin/fix-permissions must exist and be executable"
+    )
+
+
 # --- Configuration Tests ---
 
 
@@ -79,6 +91,16 @@ def test_pip_conf_valid(container):
     """Verify pip configuration contains global section."""
     result = container.run("cat /etc/pip.conf")
     assert "[global]" in result.stdout, "pip.conf missing [global] section"
+
+
+def test_pip_index_url_configured(container):
+    """Verify pip global.index-url is configured"""
+    result = container.run("pip config --global get global.index-url")
+    assert result.returncode == 0, (
+        "pip global.index-url is not set — expected an index-url in /etc/pip.conf"
+    )
+    index_url = result.stdout.strip()
+    assert index_url, "pip global.index-url is set but empty"
 
 
 def test_uv_toml_exists(container):

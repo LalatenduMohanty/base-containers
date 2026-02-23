@@ -76,6 +76,11 @@ class ContainerRunner:
         result = self.run(f"test -f {shlex.quote(path)}")
         return result.returncode == 0
 
+    def file_executable(self, path: str) -> bool:
+        """Check if a file exists and is executable."""
+        result = self.run(f"test -x {shlex.quote(path)}")
+        return result.returncode == 0
+
     def dir_exists(self, path: str) -> bool:
         """Check if a directory exists."""
         result = self.run(f"test -d {shlex.quote(path)}")
