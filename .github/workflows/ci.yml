@@ -39,6 +39,7 @@ jobs:
               - 'tests/test_common.py'
               - 'tests/conftest.py'
               - 'tests/test_cuda_image.py'
+              - 'tests/__init__.py'
             any-python:
               - 'python/**/Containerfile'
               - 'python/**/app.conf'
@@ -48,7 +49,8 @@ jobs:
               - 'tests/test_common.py'
               - 'tests/conftest.py'
               - 'tests/test_python_image.py'  
-
+              - 'tests/__init__.py'
+              
       - name: Build CUDA version matrix
         id: cuda-versions
         if: steps.filter.outputs.any-cuda == 'true'

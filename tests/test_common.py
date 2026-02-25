@@ -6,7 +6,7 @@ across all ODH base container images.
 
 import pytest
 
-from tests import APP_ROOT, WORKDIR
+from tests import APP_ROOT, WORKDIR, redact_url_credentials
 
 
 @pytest.fixture(params=["python_container", "cuda_container"])
@@ -35,6 +35,32 @@ def test_uv_available(container):
     """Verify uv package manager is installed and working."""
     result = container.run("uv --version")
     assert result.returncode == 0
+
+
+def test_pip_install_dry_run(container):
+    """Verify pip can resolve packages using the configured index-url.
+
+    Uses --dry-run to avoid modifying container state (session-scoped containers are shared).
+    A failure here indicates a broken index-url, missing CA certs, or malformed /etc/pip.conf.
+    """
+    result = container.run("pip install --dry-run --upgrade setuptools", timeout=60)
+    assert result.returncode == 0, (
+        "pip install --dry-run failed — broken index-url, missing CA certs, "
+        f"or malformed /etc/pip.conf\nstderr: {redact_url_credentials(result.stderr)}"
+    )
+
+
+def test_uv_pip_compile_smoke(container):
+    """Verify uv can resolve packages using the configured index-url.
+
+    Uses uv pip compile reading from stdin to resolve without installing (read-only).
+    A failure here indicates a broken index-url, missing CA certs, or malformed /etc/uv/uv.toml.
+    """
+    result = container.run("echo 'setuptools' | uv pip compile -", timeout=60)
+    assert result.returncode == 0, (
+        "uv pip compile failed — broken index-url, missing CA certs, "
+        f"or malformed /etc/uv/uv.toml\nstderr: {redact_url_credentials(result.stderr)}"
+    )
 
 
 # --- User & Permission Tests ---
