@@ -12,6 +12,7 @@ metadata:
         'cuda/12.8/**'.pathChanged() ||
         'requirements-build.txt'.pathChanged() ||
         'scripts/fix-permissions'.pathChanged() ||
+        '.dockerignore'.pathChanged() ||
         '.tekton/odh-midstream-cuda-base-12-8-push.yaml'.pathChanged()
       )
   creationTimestamp: null

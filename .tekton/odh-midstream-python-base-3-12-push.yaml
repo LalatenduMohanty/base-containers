@@ -12,6 +12,7 @@ metadata:
         'python/3.12/**'.pathChanged() ||
         'requirements-build.txt'.pathChanged() ||
         'scripts/fix-permissions'.pathChanged() ||
+        '.dockerignore'.pathChanged() ||
         '.tekton/odh-midstream-python-base-3-12-push.yaml'.pathChanged()
       )
   creationTimestamp: null
