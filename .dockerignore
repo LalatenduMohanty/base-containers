@@ -24,3 +24,20 @@ Thumbs.db
 # Build artifacts
 *.log
 
+# Testing and development
+tests/
+.tox/
+.pytest_cache/
+
+# Python project/tooling config (not needed in image)
+pyproject.toml
+tox.ini
+.hadolint.yaml
+renovate.json
+
+# Python build artifacts
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+

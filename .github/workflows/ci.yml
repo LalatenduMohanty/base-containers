@@ -36,6 +36,7 @@ jobs:
               - 'scripts/fix-permissions'
               - 'scripts/build.sh'
               - 'requirements-build.txt'
+              - '.dockerignore'
               - 'tests/test_common.py'
               - 'tests/conftest.py'
               - 'tests/test_cuda_image.py'
@@ -46,6 +47,7 @@ jobs:
               - 'scripts/fix-permissions'
               - 'scripts/build.sh'
               - 'requirements-build.txt'
+              - '.dockerignore'
               - 'tests/test_common.py'
               - 'tests/conftest.py'
               - 'tests/test_python_image.py'  
@@ -58,7 +60,7 @@ jobs:
           CHANGED_FILES: ${{ steps.filter.outputs.any-cuda_files }}
         run: |
           # Check if common files changed (affects all versions)
-          if echo "$CHANGED_FILES" | grep -qE 'requirements-build\.txt|scripts/fix-permissions|scripts/build\.sh|tests/'; then
+          if echo "$CHANGED_FILES" | grep -qE 'requirements-build\.txt|scripts/fix-permissions|scripts/build\.sh|\.dockerignore|tests/'; then
             echo "Common files changed - including all CUDA versions"
             # Get all available CUDA versions from directory structure
             VERSIONS=$(find cuda -maxdepth 1 -type d -name '[0-9]*.[0-9]*' \
@@ -84,7 +86,7 @@ jobs:
           CHANGED_FILES: ${{ steps.filter.outputs.any-python_files }}
         run: |
           # Check if common files changed (affects all versions)
-          if echo "$CHANGED_FILES" | grep -qE 'requirements-build\.txt|scripts/fix-permissions|scripts/build\.sh|tests/'; then
+          if echo "$CHANGED_FILES" | grep -qE 'requirements-build\.txt|scripts/fix-permissions|scripts/build\.sh|\.dockerignore|tests/'; then
             echo "Common files changed - including all Python versions"
             # Get all available Python versions from directory structure
             VERSIONS=$(find python -maxdepth 1 -type d -name '[0-9]*.[0-9]*' \
