@@ -27,6 +27,10 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# Global options (set by main via flag parsing)
+TORCH_BACKEND=""
+SKIP_PYTORCH_CHECK=false
+
 log_info() { echo -e "${GREEN}[INFO]${NC} $*"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
@@ -78,6 +82,26 @@ check_existing_version() {
 # Escape BRE pattern-side metacharacters. Safe for version strings (X.Y) only.
 sed_escape() {
     printf '%s' "$1" | sed 's/[.[\*^$/]/\\&/g'
+}
+
+# Check if a PyTorch wheel index exists for a given CUDA backend (e.g., cu128, cu130).
+# Returns 0 if the index exists (HTTP 200), 1 otherwise.
+check_pytorch_wheel_index() {
+    local backend="$1"
+    local url="https://download.pytorch.org/whl/${backend}/"
+    local http_code
+
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${url}" 2>/dev/null) || {
+        log_error "Network error: could not reach ${url}"
+        log_error "Check your internet connection or re-run with --skip-pytorch-check"
+        return 1
+    }
+
+    if [[ "${http_code}" == "200" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 # Find the latest existing version directory for a given type (e.g., cuda, python)
@@ -221,13 +245,51 @@ create_cuda_appconf() {
         fi
     done
 
+    # Validate and update PyTorch wheel index for the new CUDA version
+    local new_torch_backend
+    if [[ -n "${TORCH_BACKEND}" ]]; then
+        new_torch_backend="${TORCH_BACKEND}"
+        log_info "Using user-specified torch backend: ${new_torch_backend}"
+    else
+        new_torch_backend="cu${new_major}${new_minor}"
+    fi
+    local new_torch_index="https://download.pytorch.org/whl/${new_torch_backend}"
+
+    if [[ "${SKIP_PYTORCH_CHECK}" == "true" ]]; then
+        log_warn "Skipping PyTorch wheel index check (--skip-pytorch-check)"
+        log_warn "Using backend ${new_torch_backend} without online validation"
+    else
+        log_info "Checking PyTorch wheel index for ${new_torch_backend}..."
+        if ! check_pytorch_wheel_index "${new_torch_backend}"; then
+            log_error "No PyTorch wheel index found for ${new_torch_backend}"
+            log_error "URL checked: ${new_torch_index}/"
+            log_error "PyTorch does not publish wheels for every CUDA minor version."
+            log_error "Check available indexes at: https://download.pytorch.org/whl/"
+            log_error ""
+            log_error "To use an older CUDA wheel index, re-run with:"
+            log_error "  $0 cuda ${new_version} --torch-backend <backend>"
+            log_error "  Example: $0 cuda ${new_version} --torch-backend cu${new_major}$((new_minor > 0 ? new_minor - 1 : 0))"
+            log_error ""
+            log_error "To skip this check entirely (offline/air-gapped), re-run with:"
+            log_error "  $0 cuda ${new_version} --skip-pytorch-check"
+            # Clean up the generated directory since the app.conf is incomplete
+            rm -rf "${output_dir}"
+            exit 1
+        fi
+        log_info "PyTorch wheel index found: ${new_torch_index}"
+    fi
+
+    # Update UV_TORCH_BACKEND in app.conf
+    sed -i "s|^UV_TORCH_BACKEND=.*|UV_TORCH_BACKEND=${new_torch_backend}|" "${new_conf}"
+    log_info "Updated UV_TORCH_BACKEND to ${new_torch_backend}"
+
     log_info "Generated: ${new_conf} (from cuda/${old_version}/app.conf)"
     log_warn "NVIDIA-specific version values are marked with TODO and must be updated"
     log_warn "See: https://gitlab.com/nvidia/container-images/cuda/-/tree/master/dist/${new_version}.x"
 }
 
 print_usage() {
-    echo "Usage: $0 <cuda|python> <version>"
+    echo "Usage: $0 <cuda|python> <version> [options]"
     echo ""
     echo "Generate a version-specific Containerfile and starter app.conf from template."
     echo ""
@@ -235,10 +297,20 @@ print_usage() {
     echo "  cuda <version>    Generate CUDA Containerfile + app.conf (e.g., 12.9, 13.0)"
     echo "  python <version>  Generate Python Containerfile + app.conf (e.g., 3.12, 3.13)"
     echo ""
+    echo "Options (cuda only):"
+    echo "  --torch-backend <backend>  Use a specific PyTorch CUDA backend (e.g., cu128, cu130)"
+    echo "                             instead of auto-deriving from the CUDA version."
+    echo "                             Useful when PyTorch doesn't publish wheels for every"
+    echo "                             CUDA minor version (e.g., CUDA 13.1 uses cu130)."
+    echo "  --skip-pytorch-check       Skip the PyTorch wheel index HTTP validation."
+    echo "                             The backend is still set (auto-derived or from"
+    echo "                             --torch-backend) but not verified online."
+    echo ""
     echo "Examples:"
-    echo "  $0 cuda 12.9      # Generate cuda/12.9/{Containerfile,app.conf}"
-    echo "  $0 cuda 13.0      # Generate cuda/13.0/{Containerfile,app.conf}"
-    echo "  $0 python 3.13    # Generate python/3.13/{Containerfile,app.conf}"
+    echo "  $0 cuda 12.9                          # Auto-derives cu129, validates online"
+    echo "  $0 cuda 13.1 --torch-backend cu130    # Use cu130 for CUDA 13.1"
+    echo "  $0 cuda 13.2 --skip-pytorch-check     # Skip online check (offline/air-gapped)"
+    echo "  $0 python 3.13                        # Generate python/3.13/{Containerfile,app.conf}"
 }
 
 generate_cuda() {
@@ -323,12 +395,44 @@ main() {
 
     local type="$1"
     local version="$2"
+    shift 2
+
+    # Parse optional flags
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --torch-backend)
+                if [[ $# -lt 2 ]]; then
+                    log_error "--torch-backend requires a value (e.g., cu128, cu130)"
+                    exit 1
+                fi
+                TORCH_BACKEND="$2"
+                if [[ ! "${TORCH_BACKEND}" =~ ^cu[0-9]+$ ]]; then
+                    log_error "Invalid torch backend format: '${TORCH_BACKEND}'"
+                    log_error "Expected format: cu<digits> (e.g., cu128, cu130)"
+                    exit 1
+                fi
+                shift 2
+                ;;
+            --skip-pytorch-check)
+                SKIP_PYTORCH_CHECK=true
+                shift
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                print_usage
+                exit 1
+                ;;
+        esac
+    done
 
     case "${type}" in
         cuda)
             generate_cuda "${version}"
             ;;
         python)
+            if [[ -n "${TORCH_BACKEND}" || "${SKIP_PYTORCH_CHECK}" == "true" ]]; then
+                log_warn "--torch-backend and --skip-pytorch-check are ignored for python images"
+            fi
             generate_python "${version}"
             ;;
         *)

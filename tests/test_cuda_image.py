@@ -149,6 +149,19 @@ def test_cuda_version_label(cuda_container):
     assert "com.nvidia.cuda.version" in cuda_container.get_labels()
 
 
+def test_uv_torch_backend(cuda_container):
+    """Verify UV_TORCH_BACKEND is set to a specific CUDA backend.
+
+    Uses a specific backend (e.g. cu128, cu130) rather than "auto" because
+    auto detects GPU drivers at runtime, which are absent during container builds.
+    """
+    backend = cuda_container.get_env("UV_TORCH_BACKEND")
+    assert backend, "UV_TORCH_BACKEND environment variable should be set in CUDA image"
+    assert backend.startswith("cu"), (
+        f"Expected UV_TORCH_BACKEND to be a CUDA backend (e.g. cu128), got: {backend}"
+    )
+
+
 def test_accelerator_label_cuda(cuda_container):
     """Verify accelerator label is 'cuda' for CUDA image."""
     assert cuda_container.get_labels().get("com.opendatahub.accelerator") == "cuda"

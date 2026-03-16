@@ -190,14 +190,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Override indexes at build time via --build-arg for downstream builds.
 
 ARG PIP_INDEX_URL=https://pypi.org/simple
-ARG PIP_EXTRA_INDEX_URL
+ARG UV_TORCH_BACKEND
 
 # pip configuration (system-wide) - must be created before installing uv
 RUN mkdir -p /etc/pip && \
     { echo "[global]"; \
       echo "index-url = ${PIP_INDEX_URL}"; \
-      [ -n "${PIP_EXTRA_INDEX_URL}" ] && echo "extra-index-url = ${PIP_EXTRA_INDEX_URL}"; \
-      true; \
     } > /etc/pip.conf
 
 # Install uv - fast Python package installer
@@ -211,10 +209,14 @@ RUN python -m pip install --no-cache-dir -r /tmp/requirements-build.txt && \
 RUN mkdir -p /etc/uv && \
     { echo "[pip]"; \
       echo "index-url = \"${PIP_INDEX_URL}\""; \
-      [ -n "${PIP_EXTRA_INDEX_URL}" ] && echo "extra-index-url = [\"${PIP_EXTRA_INDEX_URL}\"]"; \
-      true; \
     } > /etc/uv/uv.toml
 ENV UV_CONFIG_FILE=/etc/uv/uv.toml
+
+# uv PyTorch backend - tells uv which CUDA variant to use for PyTorch wheels.
+# Set to a specific backend (e.g. cu128, cu130) rather than "auto" because
+# auto detects GPU drivers at runtime, which are absent during container builds.
+# Downstream builds can override via --build-arg UV_TORCH_BACKEND=""
+ENV UV_TORCH_BACKEND=${UV_TORCH_BACKEND}
 
 # Copy fix-permissions script from sclorg for OpenShift compatibility
 # Source: https://github.com/sclorg/container-common-scripts
@@ -311,7 +313,6 @@ WORKDIR /opt/app-root/src
 # Build for RHOAI (override to use internal mirror):
 #   podman build -t myapp:rhoai \
 #     --build-arg PIP_INDEX_URL=https://aipcc.internal/simple \
-#     --build-arg PIP_EXTRA_INDEX_URL="" \
 #     .
 #
 # -----------------------------------------------------------------------------

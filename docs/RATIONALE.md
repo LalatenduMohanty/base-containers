@@ -167,7 +167,6 @@ podman build -t myapp:odh .
 # RHOAI build (internal indexes)
 podman build -t myapp:rhoai \
   --build-arg PIP_INDEX_URL=https://aipcc.internal/simple \
-  --build-arg PIP_EXTRA_INDEX_URL="" \
   .
 ```
 
@@ -177,5 +176,5 @@ The following build args are expected to change between streams:
 |---|---|---|
 | `BASE_IMAGE` | Public image (CentOS, UBI) | Internal AIPCC image |
 | `PIP_INDEX_URL` | `https://pypi.org/simple` | Internal index URL |
-| `PIP_EXTRA_INDEX_URL` | PyTorch public index | Empty or internal |
+| `UV_TORCH_BACKEND` | CUDA backend (e.g., `cu128`) | Empty or internal |
 
