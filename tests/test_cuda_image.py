@@ -5,6 +5,7 @@ and labels. All tests run without GPU hardware.
 """
 
 import os
+import re
 
 import pytest
 
@@ -147,6 +148,29 @@ def test_libcudss_present(cuda_container):
 def test_cuda_version_label(cuda_container):
     """Verify CUDA version label is present."""
     assert "com.nvidia.cuda.version" in cuda_container.get_labels()
+
+
+def test_uv_torch_backend(cuda_container):
+    """Verify torch-backend is configured in uv.toml for CUDA wheel selection.
+
+    Uses a specific backend (e.g. cu128, cu130) rather than "auto" because
+    auto detects GPU drivers at runtime, which are absent during container builds.
+    Configured via uv.toml (not ENV) to avoid uv erroring on empty values.
+    """
+    result = cuda_container.run("cat /etc/uv/uv.toml")
+    assert result.returncode == 0, "Failed to read /etc/uv/uv.toml"
+    assert "torch-backend" in result.stdout, (
+        "torch-backend should be configured in /etc/uv/uv.toml for CUDA images"
+    )
+    # Verify it's set to a valid CUDA backend (cuNNN format), not "auto" or "cpu"
+    match = re.search(r'torch-backend\s*=\s*"(cu\d+)"', result.stdout)
+    assert match, f'Expected torch-backend = "cuNNN" in uv.toml, got:\n{result.stdout}'
+    # If UV_TORCH_BACKEND is set in the test environment, verify the exact value matches
+    expected_backend = os.environ.get("UV_TORCH_BACKEND")
+    if expected_backend is not None:
+        assert match.group(1) == expected_backend, (
+            f'Expected torch-backend = "{expected_backend}", got "{match.group(1)}"'
+        )
 
 
 def test_accelerator_label_cuda(cuda_container):
