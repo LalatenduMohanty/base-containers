@@ -11,6 +11,18 @@
   ],
   "labels": ["dependencies"],
   "branchPrefix": "konflux/mintmaker/",
+  "tekton": {
+    "enabled": true,
+    "includePaths": [".tekton/**"],
+    "packageRules": [
+      {
+        "matchUpdateTypes": ["digest"],
+        "matchBaseBranches": [],
+        "platformAutomerge": true,
+        "automerge": true
+      }
+    ]
+  },
   "customManagers": [
     {
       "customType": "regex",
