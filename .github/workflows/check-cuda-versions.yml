@@ -193,8 +193,8 @@ jobs:
 
           ## References
 
-          - [Adding New CUDA Version Guide](AGENTS.md#adding-a-new-cuda-version)
-          - [NVIDIA CUDA Dockerfiles](https://gitlab.com/nvidia/container-images/cuda/-/tree/master/dist/VERSION_PLACEHOLDER)
+          - [Adding New CUDA Version Guide](https://github.com/opendatahub-io/base-containers/blob/main/AGENTS.md#adding-a-new-cuda-version)
+          - [NVIDIA CUDA VERSION_PLACEHOLDER Dockerfiles](https://gitlab.com/nvidia/container-images/cuda/-/tree/master/dist)
 
           ---
           *This issue was automatically created by the check-cuda-versions workflow.*
