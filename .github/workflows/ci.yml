@@ -88,6 +88,7 @@ jobs:
             local type="$1"
             find "${type}" -maxdepth 1 -type d -name '[0-9]*.[0-9]*' \
               | sed "s|${type}/||" \
+              | grep -E '^[0-9]+\.[0-9]+$' \
               | sort -V
           }
 
@@ -245,16 +246,25 @@ jobs:
 
       - name: Get image tag from config
         id: config
+        env:
+          VERSION: ${{ matrix.version }}
         run: |
-          TAG=$(grep '^IMAGE_TAG=' python/${{ matrix.version }}/app.conf | cut -d'=' -f2)
-          if [ -z "$TAG" ]; then
-            echo "::error::IMAGE_TAG not found in python/${{ matrix.version }}/app.conf"
+          # Validate version format to prevent injection
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: ${VERSION}"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          TAG=$(grep '^IMAGE_TAG=' "python/${VERSION}/app.conf" | cut -d'=' -f2)
+          if [ -z "$TAG" ]; then
+            echo "::error::IMAGE_TAG not found in python/${VERSION}/app.conf"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Build Python ${{ matrix.version }} image
-        run: ./scripts/build.sh python-${{ matrix.version }}
+        env:
+          VERSION: ${{ matrix.version }}
+        run: ./scripts/build.sh "python-${VERSION}"
 
       - name: Run Python image tests
         env:
@@ -328,16 +338,25 @@ jobs:
 
       - name: Get image tag from config
         id: config
+        env:
+          VERSION: ${{ matrix.version }}
         run: |
-          TAG=$(grep '^IMAGE_TAG=' cuda/${{ matrix.version }}/app.conf | cut -d'=' -f2)
-          if [ -z "$TAG" ]; then
-            echo "::error::IMAGE_TAG not found in cuda/${{ matrix.version }}/app.conf"
+          # Validate version format to prevent injection
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: ${VERSION}"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          TAG=$(grep '^IMAGE_TAG=' "cuda/${VERSION}/app.conf" | cut -d'=' -f2)
+          if [ -z "$TAG" ]; then
+            echo "::error::IMAGE_TAG not found in cuda/${VERSION}/app.conf"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Build CUDA ${{ matrix.version }} image
-        run: ./scripts/build.sh cuda-${{ matrix.version }}
+        env:
+          VERSION: ${{ matrix.version }}
+        run: ./scripts/build.sh "cuda-${VERSION}"
 
       - name: Run CUDA image tests
         env:
@@ -411,16 +430,25 @@ jobs:
 
       - name: Get image tag from config
         id: config
+        env:
+          VERSION: ${{ matrix.version }}
         run: |
-          TAG=$(grep '^IMAGE_TAG=' rocm/${{ matrix.version }}/app.conf | cut -d'=' -f2)
-          if [ -z "$TAG" ]; then
-            echo "::error::IMAGE_TAG not found in rocm/${{ matrix.version }}/app.conf"
+          # Validate version format to prevent injection
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: ${VERSION}"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          TAG=$(grep '^IMAGE_TAG=' "rocm/${VERSION}/app.conf" | cut -d'=' -f2)
+          if [ -z "$TAG" ]; then
+            echo "::error::IMAGE_TAG not found in rocm/${VERSION}/app.conf"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Build ROCm ${{ matrix.version }} image
-        run: ./scripts/build.sh rocm-${{ matrix.version }}
+        env:
+          VERSION: ${{ matrix.version }}
+        run: ./scripts/build.sh "rocm-${VERSION}"
 
       - name: Run ROCm image tests
         env:
