@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   check-versions:
+    if: github.repository == 'opendatahub-io/base-containers'
     name: Check for New CUDA Versions
     runs-on: ubuntu-latest
     timeout-minutes: 10
