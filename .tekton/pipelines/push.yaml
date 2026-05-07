@@ -595,6 +595,11 @@ spec:
     runAfter:
     - build-image-index
     - generate-image-tag
+    when:
+    - input: $(tasks.init.results.build)
+      operator: in
+      values:
+      - "true"
     taskRef:
       params:
       - name: name
